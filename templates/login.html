@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>学生寮 外泊・欠食システム</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .login-container {
+            max-width: 400px;
+            margin: 50px auto;
+            padding: 40px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        /* スマートフォンなどの小さな画面に対応するためのCSS */
+        @media (max-width: 576px) {
+            .login-container {
+                margin: 20px auto;
+                padding: 20px;
+                box-shadow: none;
+            }
+        }
+        .logo-container {
+            width: 100%;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .logo {
+            max-width: 250px; /* ロゴの最大幅を250pxに拡大 */
+            height: auto;
+            display: block;
+            margin: 0 auto;
+            aspect-ratio: 3 / 1;
+        }
+        .footer {
+            margin-top: 2rem;
+            text-align: center;
+            color: #6c757d;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-12 col-md-8 col-lg-6">
+            <div class="login-container">
+                <div class="logo-container">
+                    <img src="img/logo.png" alt="寮のロゴ" class="logo">
+                </div>
+                <p class="text-center mb-3">香川高等専門学校</p>
+                <h3 class="text-center mb-4">外泊・欠食システム</h3>
+                {{if .error}}
+                    <p style="color: red;">{{.error}}</p>
+                {{end}}
+                <form action="/login" method="post">
+                    <div class="form-group">
+                        <label for="student_id">学籍番号</label>
+                        <input type="text" class="form-control" id="student_id" name="student_id" placeholder="数字のみ" pattern="\d+" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="password">パスワード</label>
+                        <div class="input-group">
+                            <input type="password" class="form-control" id="password" name="password" placeholder="パスワードを入力してください" required>
+                        </div>
+                    </div>
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg">ログイン</button>
+                    </div>
+                </form>
+            </div>
+            <div class="footer">
+                <small>Version 0.0.1 Closed</small>
+                <small> | </small>
+                <small><a href="#" class="text-decoration-none">GitHub</a></small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
