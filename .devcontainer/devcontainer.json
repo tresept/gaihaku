@@ -1,0 +1,14 @@
+{
+  "name": "Gaihaku",
+  "dockerComposeFile": "../docker-compose.yml",
+  "service": "go-app",
+  "workspaceFolder": "/go/src",
+  "forwardPorts": [5432],
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "golang.go"
+      ]
+    }
+  }
+}
