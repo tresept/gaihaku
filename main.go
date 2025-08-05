@@ -55,7 +55,6 @@ func main() {
 	e.GET("/", loginFormHandler)
 	e.POST("/login", loginHandler)
 	e.GET("/main", mainPageHandler)
-	e.POST("/gaihaku", gaihakuRecordHandler)
 	e.GET("/logout", logoutHandler)
 
 	// サーバーをポート8080で起動

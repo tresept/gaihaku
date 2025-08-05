@@ -9,6 +9,23 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+// mainPageHandlerは認証後のメインページを表示します
+func mainPageHandler(c echo.Context) error {
+	// セッションを取得
+	sess, err := session.Get("session", c)
+	if err != nil {
+		// セッションの取得に失敗したら、ログインページへリダイレクト
+		return c.Redirect(http.StatusTemporaryRedirect, "/")
+	}
+
+	// セッションに "authenticated" の値がない、または false の場合はログインページへリダイレクト
+	if auth, ok := sess.Values["authenticated"].(bool); !ok || !auth {
+		return c.Redirect(http.StatusTemporaryRedirect, "/")
+	}
+
+	return c.String(http.StatusOK, "Welcome to the main page! You are logged in.")
+}
+
 // loginFormHandlerはログインフォームを表示します
 func loginFormHandler(c echo.Context) error {
 	return c.Render(http.StatusOK, "login.html", map[string]interface{}{})
@@ -20,6 +37,7 @@ func loginHandler(c echo.Context) error {
 	password := c.FormValue("password")
 
 	if AuthenticateUser(db, studentID, password) {
+		// 認証成功
 		sess, _ := session.Get("session", c)
 		sess.Options = &sessions.Options{
 			Path:     "/",
@@ -29,60 +47,35 @@ func loginHandler(c echo.Context) error {
 		sess.Values["authenticated"] = true
 		sess.Values["studentID"] = studentID
 
+		// セッションの保存をリダイレクトの前に実行
 		if err := sess.Save(c.Request(), c.Response()); err != nil {
 			log.Printf("Failed to save session: %v", err)
 			return c.String(http.StatusInternalServerError, "Failed to login.")
 		}
+
 		return c.Redirect(http.StatusSeeOther, "/main")
 	}
 
+	// 認証失敗
 	return c.Render(http.StatusUnauthorized, "login.html", map[string]interface{}{
 		"error": "認証に失敗しました。学籍番号またはパスワードが間違っています。",
 	})
 }
 
-// mainPageHandlerは認証後のメインページを表示します
-func mainPageHandler(c echo.Context) error {
-	// 認証チェック
-	sess, err := session.Get("session", c)
-	if err != nil {
-		return c.Redirect(http.StatusTemporaryRedirect, "/")
-	}
-	if auth, ok := sess.Values["authenticated"].(bool); !ok || !auth {
-		return c.Redirect(http.StatusTemporaryRedirect, "/")
-	}
-	studentID := sess.Values["studentID"].(string)
-
-	// ここに欠食・外泊記録を取得する処理を記述します。
-	// まだこの処理は実装していないので、
-	// 一旦空のスライスを返してエラーが出ないようにします。
-	records := []GaihakuRecord{}
-
-	// テンプレートにデータを渡してレンダリング
-	return c.Render(http.StatusOK, "main.html", map[string]interface{}{
-		"studentID": studentID,
-		"records":   records,
-	})
-}
-
-// gaihakuRecordHandlerは欠食・外泊届を処理します
-func gaihakuRecordHandler(c echo.Context) error {
-	// ここに欠食・外泊の登録処理を実装します
-	return c.String(http.StatusOK, "Gaihaku registration logic will go here.")
-}
-
-// logoutHandlerはセッションを破棄してログアウト処理を行います
 func logoutHandler(c echo.Context) error {
 	sess, err := session.Get("session", c)
 	if err != nil {
+		// セッションが取得できない場合は、既にログアウト状態とみなす
 		return c.Redirect(http.StatusTemporaryRedirect, "/")
 	}
-	sess.Values = map[interface{}]interface{}{}
-	sess.Options.MaxAge = -1
 
+	// セッションの値をクリアして、有効期限を過去にする
+	sess.Options.MaxAge = -1
 	if err = sess.Save(c.Request(), c.Response()); err != nil {
 		log.Printf("Failed to save session: %v", err)
 		return c.String(http.StatusInternalServerError, "Failed to log out.")
 	}
+
+	// ログインページにリダイレクト
 	return c.Redirect(http.StatusSeeOther, "/")
 }
