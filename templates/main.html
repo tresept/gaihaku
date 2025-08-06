@@ -80,7 +80,7 @@
         </div>
     {{end}}
     
-    <form action="/gaihaku" method="post" class="d-none d-md-block">
+    <form action="/gaihaku" method="post" class="d-none d-md-block" onsubmit="return confirm('登録を完了しますか？');">
         <div class="table-responsive">
             <table class="table table-hover table-bordered align-middle text-center">
                 <thead class="table-light">
@@ -98,22 +98,22 @@
                     <tr>
                         <th scope="row">{{.RecordDate.Format "2006/01/02"}}</th>
                         <td>
-                            <button type="button" class="btn {{if .Breakfast}}btn-success{{else}}btn-outline-danger{{end}}" data-toggle="button" data-date="{{.RecordDate.Format "2006-01-02"}}" data-meal="breakfast" aria-pressed="{ .Breakfast}}" autocomplete="off">
+                            <button type="button" class="btn {{if .Breakfast}}btn-success{{else}}btn-outline-danger{{end}}" data-toggle="button" data-date="{{.RecordDate.Format "2006-01-02"}}" data-meal="breakfast" aria-pressed="{{.Breakfast}}" autocomplete="off">
                                 <i class="bi {{if .Breakfast}}bi-check-lg{{else}}bi-x-lg{{end}}"></i>
                             </button>
-                            <input type="hidden" name="breakfast-{{.RecordDate.Format "2006-01-02"}}" value="{{if .Breakfast}}on{{end}}">
+                            <input type="hidden" name="breakfast-{{.RecordDate.Format "2006-01-02"}}" value="{{if not .Breakfast}}on{{end}}">
                         </td>
                         <td>
-                            <button type="button" class="btn {{if .Lunch}}btn-success{{else}}btn-outline-danger{{end}}" data-toggle="button" data-date="{{.RecordDate.Format "2006-01-02"}}" data-meal="lunch" aria-pressed="{ .Lunch}}" autocomplete="off">
+                            <button type="button" class="btn {{if .Lunch}}btn-success{{else}}btn-outline-danger{{end}}" data-toggle="button" data-date="{{.RecordDate.Format "2006-01-02"}}" data-meal="lunch" aria-pressed="{{.Lunch}}" autocomplete="off">
                                 <i class="bi {{if .Lunch}}bi-check-lg{{else}}bi-x-lg{{end}}"></i>
                             </button>
-                            <input type="hidden" name="lunch-{{.RecordDate.Format "2006-01-02"}}" value="{{if .Lunch}}on{{end}}">
+                            <input type="hidden" name="lunch-{{.RecordDate.Format "2006-01-02"}}" value="{{if not .Lunch}}on{{end}}">
                         </td>
                         <td>
-                            <button type="button" class="btn {{if .Dinner}}btn-success{{else}}btn-outline-danger{{end}}" data-toggle="button" data-date="{{.RecordDate.Format "2006-01-02"}}" data-meal="dinner" aria-pressed="{ .Dinner}}" autocomplete="off">
+                            <button type="button" class="btn {{if .Dinner}}btn-success{{else}}btn-outline-danger{{end}}" data-toggle="button" data-date="{{.RecordDate.Format "2006-01-02"}}" data-meal="dinner" aria-pressed="{{.Dinner}}" autocomplete="off">
                                 <i class="bi {{if .Dinner}}bi-check-lg{{else}}bi-x-lg{{end}}"></i>
                             </button>
-                            <input type="hidden" name="dinner-{{.RecordDate.Format "2006-01-02"}}" value="{{if .Dinner}}on{{end}}">
+                            <input type="hidden" name="dinner-{{.RecordDate.Format "2006-01-02"}}" value="{{if not .Dinner}}on{{end}}">
                         </td>
                         <td>
                             <button type="button" class="btn {{if .Overnight}}btn-success{{else}}btn-outline-danger{{end}}" data-toggle="button" data-date="{{.RecordDate.Format "2006-01-02"}}" data-meal="overnight" aria-pressed="{{.Overnight}}" autocomplete="off">
@@ -134,7 +134,7 @@
         </div>
     </form>
     
-    <form action="/gaihaku" method="post" class="d-block d-md-none">
+    <form action="/gaihaku" method="post" class="d-block d-md-none" onsubmit="return confirm('登録を完了しますか？');">
         <div class="card-responsive mt-3">
             {{range .records}}
             <div class="card mb-3">
@@ -185,7 +185,21 @@
         toggleButtons.forEach(button => {
             const date = button.getAttribute('data-date');
             const meal = button.getAttribute('data-meal');
-            const hiddenInput = document.querySelector(`input[name="${meal}-${date}"]`);
+            let hiddenInput = document.querySelector(`input[name="${meal}-${date}"]`);
+            
+            if (!hiddenInput) {
+                hiddenInput = document.createElement('input');
+                hiddenInput.type = 'hidden';
+                hiddenInput.name = `${meal}-${date}`;
+                button.parentNode.appendChild(hiddenInput);
+            }
+            
+            // 初期状態をhidden inputに反映
+            if (button.getAttribute('aria-pressed') === 'true') {
+                hiddenInput.value = 'on';
+            } else {
+                hiddenInput.value = '';
+            }
 
             button.addEventListener('click', function() {
                 const isPressed = this.getAttribute('aria-pressed') === 'true';
@@ -195,13 +209,13 @@
                     this.classList.remove('btn-success');
                     this.classList.add('btn-outline-danger');
                     this.innerHTML = '<i class="bi bi-x-lg"></i>';
-                    hiddenInput.value = ''; // ボタンが「✕」になったら、値を空にする
+                    hiddenInput.value = '';
                 } else {
                     this.setAttribute('aria-pressed', 'true');
                     this.classList.remove('btn-outline-danger');
                     this.classList.add('btn-success');
                     this.innerHTML = '<i class="bi bi-check-lg"></i>';
-                    hiddenInput.value = 'on'; // ボタンが「✓」になったら、値を"on"にする
+                    hiddenInput.value = 'on';
                 }
             });
         });

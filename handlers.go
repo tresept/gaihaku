@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -25,6 +26,7 @@ func mainPageHandler(c echo.Context) error {
 	}
 
 	studentID := sess.Values["studentID"].(string)
+
 	log.Printf("User %s accessed the main page", studentID)
 
 	flashes := sess.Flashes("success_message")
@@ -32,7 +34,10 @@ func mainPageHandler(c echo.Context) error {
 	if len(flashes) > 0 {
 		successMessage = flashes[0].(string)
 	}
-	sess.Save(c.Request(), c.Response())
+
+	if err := sess.Save(c.Request(), c.Response()); err != nil {
+		log.Printf("Failed to save session: %v", err)
+	}
 
 	// データベースから欠食・外泊記録を取得
 	records, err := getGaihakuKesshokuRecords(db, studentID)
@@ -91,13 +96,48 @@ func gaihakuHandler(c echo.Context) error {
 		}
 	}
 
+	// 成功したらセッションにフラッシュメッセージを保存
+	timestamp := time.Now().Format("[15:04]")
+	message := fmt.Sprintf("%s 登録を受け付けました。", timestamp)
+
+	sess.AddFlash(message, "success_message")
+	if err := sess.Save(c.Request(), c.Response()); err != nil {
+		log.Printf("Failed to save session: %v", err)
+	}
+
 	// 成功したらメインページにリダイレクト
 	return c.Redirect(http.StatusSeeOther, "/main")
 }
 
 // loginFormHandlerはログインフォームを表示します
 func loginFormHandler(c echo.Context) error {
-	return c.Render(http.StatusOK, "login.html", map[string]interface{}{})
+	sess, _ := session.Get("session", c)
+
+	// セッションに "authenticated" の値があり、trueの場合は /main にリダイレクト
+	if auth, ok := sess.Values["authenticated"].(bool); ok && auth {
+		// リダイレクトする前に、セッションを保存
+		if err := sess.Save(c.Request(), c.Response()); err != nil {
+			log.Printf("Failed to save session before redirect: %v", err)
+		}
+		return c.Redirect(http.StatusSeeOther, "/main")
+	}
+
+	// セッションからフラッシュメッセージを取得
+	flashes := sess.Flashes("login_error")
+	errorMessage := ""
+	if len(flashes) > 0 {
+		errorMessage = flashes[0].(string)
+	}
+
+	// セッションを保存して、メッセージを削除
+	if err := sess.Save(c.Request(), c.Response()); err != nil {
+		log.Printf("Failed to save session after flashing: %v", err)
+	}
+
+	// テンプレートにエラーメッセージを渡してレンダリング
+	return c.Render(http.StatusOK, "login.html", map[string]interface{}{
+		"error": errorMessage,
+	})
 }
 
 // loginHandlerはログイン認証処理を行います
@@ -126,9 +166,12 @@ func loginHandler(c echo.Context) error {
 	}
 
 	// 認証失敗
-	return c.Render(http.StatusUnauthorized, "login.html", map[string]interface{}{
-		"error": "認証に失敗しました。学籍番号またはパスワードが間違っています。",
-	})
+	sess, _ := session.Get("session", c)
+	sess.AddFlash("認証に失敗しました。学籍番号またはパスワードが間違っています。", "login_error")
+	sess.Save(c.Request(), c.Response())
+
+	// ルートにリダイレクト
+	return c.Redirect(http.StatusSeeOther, "/")
 }
 
 func logoutHandler(c echo.Context) error {
