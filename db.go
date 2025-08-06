@@ -1,7 +1,5 @@
 package main
 
-// export SESSION_SECRET_KEY="your-secret-key-here"
-
 import (
 	"database/sql"
 	"fmt"
@@ -110,17 +108,17 @@ func AuthenticateUser(db *sql.DB, studentID, password string) bool {
 }
 
 // getGaihakuRecords は学生の欠食・外泊記録を取得します
-func getGaihakuRecords(db *sql.DB, studentID string) ([]GaihakuRecord, error) {
-	records := []GaihakuRecord{}
+func getGaihakuRecords(db *sql.DB, studentID string) ([]GaihakuKesshokuRecord, error) {
+	records := []GaihakuKesshokuRecord{}
 	// 現在の日付から1週間後までを取得
-	rows, err := db.Query("SELECT record_date, breakfast, lunch, dinner, overnight, note FROM gaihaku_records WHERE student_id = $1 AND record_date >= CURRENT_DATE AND record_date <= CURRENT_DATE + INTERVAL '7 days' ORDER BY record_date ASC", studentID)
+	rows, err := db.Query("SELECT record_date, breakfast, lunch, dinner, overnight, note FROM gaihaku_kesshoku_records WHERE student_id = $1 AND record_date >= CURRENT_DATE AND record_date <= CURRENT_DATE + INTERVAL '7 days' ORDER BY record_date ASC", studentID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query gaihaku records: %w", err)
 	}
 	defer rows.Close()
 
 	for rows.Next() {
-		var r GaihakuRecord
+		var r GaihakuKesshokuRecord
 		if err := rows.Scan(&r.RecordDate, &r.Breakfast, &r.Lunch, &r.Dinner, &r.Overnight, &r.Note); err != nil {
 			log.Printf("Failed to scan gaihaku record: %v", err)
 			continue

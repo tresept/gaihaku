@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/gorilla/sessions"
 	"github.com/labstack/echo-contrib/session"
@@ -23,7 +24,48 @@ func mainPageHandler(c echo.Context) error {
 		return c.Redirect(http.StatusTemporaryRedirect, "/")
 	}
 
-	return c.String(http.StatusOK, "Welcome to the main page! You are logged in.")
+	studentID := sess.Values["studentID"].(string)
+	log.Printf("User %s accessed the main page", studentID)
+
+	var records []GaihakuKesshokuRecord
+	// ここでデータベースからのレコード取得処理を行う
+	// 例として、14日分のダミーデータを生成
+
+	now := time.Now()
+
+	for i := 0; i < 14; i++ {
+		records = append(records, GaihakuKesshokuRecord{
+			RecordDate: now.AddDate(0, 0, i),
+			Breakfast:  true,
+			Lunch:      true,
+			Dinner:     true,
+			Overnight:  false,
+			Note:       "",
+		})
+	}
+
+	return c.Render(http.StatusOK, "main.html", map[string]interface{}{
+		"studentID": studentID,
+		"records":   records,
+	})
+}
+
+func gaihakuHandler(c echo.Context) error {
+	// セッションを取得
+	sess, err := session.Get("session", c)
+	if err != nil {
+		return c.Redirect(http.StatusTemporaryRedirect, "/")
+	}
+
+	// 認証されていない場合はログインページへリダイレクト
+	if auth, ok := sess.Values["authenticated"].(bool); !ok || !auth {
+		return c.Redirect(http.StatusTemporaryRedirect, "/")
+	}
+
+	studentID := sess.Values["studentID"].(string)
+	log.Printf("User %s accessed the gaihaku page", studentID)
+
+	return c.Redirect(http.StatusSeeOther, "/main")
 }
 
 // loginFormHandlerはログインフォームを表示します
