@@ -1,0 +1,27 @@
+# Executable files
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Test files
+*_test
+
+# Build files and dependencies
+/bin/
+/pkg/
+/vendor/
+
+# IDE files
+.idea/
+.vscode/
+
+# Environment variables and secrets
+.env
+.local.env
+
+# Docker
+.dockerignore
+
+# Go modules
+go.sum
