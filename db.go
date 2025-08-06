@@ -37,7 +37,7 @@ func initDBSchema(db *sql.DB) error {
 	}
 	log.Println("Users table created or already exists!")
 
-	if err := createGaihakuRecordsTable(db); err != nil {
+	if err := createGaihakuKesshokuRecordsTable(db); err != nil {
 		return err
 	}
 	log.Println("Gaihaku records table created or already exists!")
@@ -57,16 +57,19 @@ func createUsersTable(db *sql.DB) error {
 	return err
 }
 
-// createKesshokuRecordsTable は欠食記録テーブルを作成します
-func createGaihakuRecordsTable(db *sql.DB) error {
+// createGaihakuKesshokuRecordsTable は欠食・外泊・点呼記録テーブルを作成します
+func createGaihakuKesshokuRecordsTable(db *sql.DB) error {
 	const createTableSQL = `
-	CREATE TABLE IF NOT EXISTS kesshoku_records (
+	CREATE TABLE IF NOT EXISTS gaihaku_kesshoku_records (
 		id SERIAL PRIMARY KEY,
 		student_id VARCHAR(50) NOT NULL,
 		record_date DATE NOT NULL,
 		breakfast BOOLEAN NOT NULL DEFAULT TRUE,
 		lunch BOOLEAN NOT NULL DEFAULT TRUE,
 		dinner BOOLEAN NOT NULL DEFAULT TRUE,
+		overnight BOOLEAN NOT NULL DEFAULT FALSE,
+		roll_call BOOLEAN NOT NULL DEFAULT FALSE,
+		note TEXT,
 		created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
 		UNIQUE (student_id, record_date)
 	);`
