@@ -52,6 +52,7 @@ func main() {
 	e.Use(session.Middleware(sessions.NewCookieStore([]byte(secretKey))))
 
 	// ルーティングの設定
+	e.Static("/static", "static")
 	e.GET("/", loginFormHandler)
 	e.POST("/login", loginHandler)
 	e.GET("/main", mainPageHandler)
