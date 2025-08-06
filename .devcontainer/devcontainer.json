@@ -1,5 +1,5 @@
 {
-  "name": "Gaihaku",
+  "name": "gaihakudev",
   "dockerComposeFile": "../docker-compose.yml",
   "service": "go-app",
   "workspaceFolder": "/go/src",
@@ -10,5 +10,17 @@
         "golang.go"
       ]
     }
+  },
+  "features": {
+    "ghcr.io/devcontainers/features/git-auth:1": {
+      "gitCredentialManager": "true"
+    }
+  },
+  "remoteUser": "vscode",
+  "mounts": [
+    "source=${localEnv:HOME}/.ssh,target=/home/vscode/.ssh,type=bind,consistency=cached"
+  ],
+  "containerEnv": {
+    "SESSION_SECRET_KEY": "your-secret-key-here"
   }
 }

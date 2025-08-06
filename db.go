@@ -57,23 +57,26 @@ func createUsersTable(db *sql.DB) error {
 	return err
 }
 
-// createGaihakuRecordsTable は欠食・外泊記録テーブルを作成します
+// createKesshokuRecordsTable は欠食記録テーブルを作成します
 func createGaihakuRecordsTable(db *sql.DB) error {
 	const createTableSQL = `
-	CREATE TABLE IF NOT EXISTS gaihaku_records (
+	CREATE TABLE IF NOT EXISTS kesshoku_records (
 		id SERIAL PRIMARY KEY,
 		student_id VARCHAR(50) NOT NULL,
 		record_date DATE NOT NULL,
 		breakfast BOOLEAN NOT NULL DEFAULT TRUE,
 		lunch BOOLEAN NOT NULL DEFAULT TRUE,
 		dinner BOOLEAN NOT NULL DEFAULT TRUE,
-		overnight BOOLEAN NOT NULL DEFAULT FALSE,
-		note TEXT,
 		created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
 		UNIQUE (student_id, record_date)
 	);`
+
 	_, err := db.Exec(createTableSQL)
-	return err
+	if err != nil {
+		return fmt.Errorf("failed to execute SQL: %w", err)
+	}
+
+	return nil
 }
 
 // RegisterUser は新しいユーザーを登録します
