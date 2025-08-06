@@ -27,21 +27,11 @@ func mainPageHandler(c echo.Context) error {
 	studentID := sess.Values["studentID"].(string)
 	log.Printf("User %s accessed the main page", studentID)
 
-	var records []GaihakuKesshokuRecord
-	// ここでデータベースからのレコード取得処理を行う
-	// 例として、14日分のダミーデータを生成
-
-	now := time.Now()
-
-	for i := 0; i < 14; i++ {
-		records = append(records, GaihakuKesshokuRecord{
-			RecordDate: now.AddDate(0, 0, i),
-			Breakfast:  true,
-			Lunch:      true,
-			Dinner:     true,
-			Overnight:  false,
-			Note:       "",
-		})
+	// データベースから欠食・外泊記録を取得
+	records, err := getGaihakuKesshokuRecords(db, studentID)
+	if err != nil {
+		log.Printf("Failed to get records for studentID %s: %v", studentID, err)
+		return c.String(http.StatusInternalServerError, "Failed to retrieve records.")
 	}
 
 	return c.Render(http.StatusOK, "main.html", map[string]interface{}{
@@ -65,6 +55,40 @@ func gaihakuHandler(c echo.Context) error {
 	studentID := sess.Values["studentID"].(string)
 	log.Printf("User %s accessed the gaihaku page", studentID)
 
+	formValues, err := c.FormParams()
+	if err != nil {
+		log.Printf("Failed to parse form data: %v", err)
+		return c.String(http.StatusBadRequest, "Invalid form data.")
+	}
+
+	// 現在の日付から7日分のデータを処理
+	now := time.Now()
+	for i := 0; i < 7; i++ {
+		recordDate := now.AddDate(0, 0, i)
+		dateStr := recordDate.Format("2006-01-02")
+
+		// フォームデータから各項目を取得
+		// "on"が送信された場合はtrue、そうでない場合はfalseになる
+		breakfast := formValues.Get("breakfast-"+dateStr) == "on"
+		lunch := formValues.Get("lunch-"+dateStr) == "on"
+		dinner := formValues.Get("dinner-"+dateStr) == "on"
+		overnight := formValues.Get("overnight-"+dateStr) == "on"
+		note := formValues.Get("note-" + dateStr)
+
+		// データベースにデータを挿入または更新
+		query := `INSERT INTO gaihaku_kesshoku_records (student_id, record_date, breakfast, lunch, dinner, overnight, note) VALUES ($1, $2, $3, $4, $5, $6, $7)
+		ON CONFLICT (student_id, record_date) DO UPDATE SET breakfast = EXCLUDED.breakfast, lunch = EXCLUDED.lunch, dinner = EXCLUDED.dinner, overnight = EXCLUDED.overnight, note = EXCLUDED.note;`
+
+		_, err = db.Exec(query, studentID, recordDate, !breakfast, !lunch, !dinner, overnight, note)
+		if err != nil {
+			log.Printf("Failed to insert or update record for %s: %v", dateStr, err)
+			return c.String(http.StatusInternalServerError, "Failed to submit record.")
+		}
+	}
+
+	log.Printf("Successfully submitted records for student %s", studentID)
+
+	// 成功したらメインページにリダイレクト
 	return c.Redirect(http.StatusSeeOther, "/main")
 }
 
