@@ -27,6 +27,13 @@ func mainPageHandler(c echo.Context) error {
 	studentID := sess.Values["studentID"].(string)
 	log.Printf("User %s accessed the main page", studentID)
 
+	flashes := sess.Flashes("success_message")
+	successMessage := ""
+	if len(flashes) > 0 {
+		successMessage = flashes[0].(string)
+	}
+	sess.Save(c.Request(), c.Response())
+
 	// データベースから欠食・外泊記録を取得
 	records, err := getGaihakuKesshokuRecords(db, studentID)
 	if err != nil {
@@ -35,8 +42,9 @@ func mainPageHandler(c echo.Context) error {
 	}
 
 	return c.Render(http.StatusOK, "main.html", map[string]interface{}{
-		"studentID": studentID,
-		"records":   records,
+		"studentID":      studentID,
+		"records":        records,
+		"successMessage": successMessage,
 	})
 }
 
@@ -85,6 +93,9 @@ func gaihakuHandler(c echo.Context) error {
 			return c.String(http.StatusInternalServerError, "Failed to submit record.")
 		}
 	}
+
+	sess.AddFlash("登録を受け付けました。", "success_message")
+	sess.Save(c.Request(), c.Response())
 
 	log.Printf("Successfully submitted records for student %s", studentID)
 

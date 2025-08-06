@@ -71,8 +71,14 @@
 <div class="container container-main">
     <h3 class="text-center mb-4">外泊・欠食登録</h3>
     <div class="alert alert-info" role="alert">
-        初期状態は「喫食」「寮に滞在」です。欠食または外泊する場合にボタンを押して変更してください。
+        欠食は「×」で表されます。外泊は、「✔︎」で表されます。<br>
+        1週間先までの欠食・外泊を登録できます。<br>
     </div>
+    {{if .successMessage}}
+        <div class="alert alert-success" role="alert">
+            {{.successMessage}}
+        </div>
+    {{end}}
     
     <form action="/gaihaku" method="post" class="d-none d-md-block">
         <div class="table-responsive">
