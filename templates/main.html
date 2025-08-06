@@ -98,22 +98,22 @@
                     <tr>
                         <th scope="row">{{.RecordDate.Format "2006/01/02"}}</th>
                         <td>
-                            <button type="button" class="btn {{if not .Breakfast}}btn-success{{else}}btn-outline-danger{{end}}" data-toggle="button" data-date="{{.RecordDate.Format "2006-01-02"}}" data-meal="breakfast" aria-pressed="{{not .Breakfast}}" autocomplete="off">
-                                <i class="bi {{if not .Breakfast}}bi-check-lg{{else}}bi-x-lg{{end}}"></i>
+                            <button type="button" class="btn {{if .Breakfast}}btn-success{{else}}btn-outline-danger{{end}}" data-toggle="button" data-date="{{.RecordDate.Format "2006-01-02"}}" data-meal="breakfast" aria-pressed="{ .Breakfast}}" autocomplete="off">
+                                <i class="bi {{if .Breakfast}}bi-check-lg{{else}}bi-x-lg{{end}}"></i>
                             </button>
-                            <input type="hidden" name="breakfast-{{.RecordDate.Format "2006-01-02"}}" value="{{if not .Breakfast}}on{{end}}">
+                            <input type="hidden" name="breakfast-{{.RecordDate.Format "2006-01-02"}}" value="{{if .Breakfast}}on{{end}}">
                         </td>
                         <td>
-                            <button type="button" class="btn {{if not .Lunch}}btn-success{{else}}btn-outline-danger{{end}}" data-toggle="button" data-date="{{.RecordDate.Format "2006-01-02"}}" data-meal="lunch" aria-pressed="{{not .Lunch}}" autocomplete="off">
-                                <i class="bi {{if not .Lunch}}bi-check-lg{{else}}bi-x-lg{{end}}"></i>
+                            <button type="button" class="btn {{if .Lunch}}btn-success{{else}}btn-outline-danger{{end}}" data-toggle="button" data-date="{{.RecordDate.Format "2006-01-02"}}" data-meal="lunch" aria-pressed="{ .Lunch}}" autocomplete="off">
+                                <i class="bi {{if .Lunch}}bi-check-lg{{else}}bi-x-lg{{end}}"></i>
                             </button>
-                            <input type="hidden" name="lunch-{{.RecordDate.Format "2006-01-02"}}" value="{{if not .Lunch}}on{{end}}">
+                            <input type="hidden" name="lunch-{{.RecordDate.Format "2006-01-02"}}" value="{{if .Lunch}}on{{end}}">
                         </td>
                         <td>
-                            <button type="button" class="btn {{if not .Dinner}}btn-success{{else}}btn-outline-danger{{end}}" data-toggle="button" data-date="{{.RecordDate.Format "2006-01-02"}}" data-meal="dinner" aria-pressed="{{not .Dinner}}" autocomplete="off">
-                                <i class="bi {{if not .Dinner}}bi-check-lg{{else}}bi-x-lg{{end}}"></i>
+                            <button type="button" class="btn {{if .Dinner}}btn-success{{else}}btn-outline-danger{{end}}" data-toggle="button" data-date="{{.RecordDate.Format "2006-01-02"}}" data-meal="dinner" aria-pressed="{ .Dinner}}" autocomplete="off">
+                                <i class="bi {{if .Dinner}}bi-check-lg{{else}}bi-x-lg{{end}}"></i>
                             </button>
-                            <input type="hidden" name="dinner-{{.RecordDate.Format "2006-01-02"}}" value="{{if not .Dinner}}on{{end}}">
+                            <input type="hidden" name="dinner-{{.RecordDate.Format "2006-01-02"}}" value="{{if .Dinner}}on{{end}}">
                         </td>
                         <td>
                             <button type="button" class="btn {{if .Overnight}}btn-success{{else}}btn-outline-danger{{end}}" data-toggle="button" data-date="{{.RecordDate.Format "2006-01-02"}}" data-meal="overnight" aria-pressed="{{.Overnight}}" autocomplete="off">

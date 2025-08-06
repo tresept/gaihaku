@@ -61,7 +61,6 @@ func gaihakuHandler(c echo.Context) error {
 	}
 
 	studentID := sess.Values["studentID"].(string)
-	log.Printf("User %s accessed the gaihaku page", studentID)
 
 	formValues, err := c.FormParams()
 	if err != nil {
@@ -69,35 +68,28 @@ func gaihakuHandler(c echo.Context) error {
 		return c.String(http.StatusBadRequest, "Invalid form data.")
 	}
 
-	// 現在の日付から7日分のデータを処理
 	now := time.Now()
 	for i := 0; i < 7; i++ {
 		recordDate := now.AddDate(0, 0, i)
 		dateStr := recordDate.Format("2006-01-02")
 
 		// フォームデータから各項目を取得
-		// "on"が送信された場合はtrue、そうでない場合はfalseになる
+		// HTMLのaria-pressed="true"に対応
 		breakfast := formValues.Get("breakfast-"+dateStr) == "on"
 		lunch := formValues.Get("lunch-"+dateStr) == "on"
 		dinner := formValues.Get("dinner-"+dateStr) == "on"
 		overnight := formValues.Get("overnight-"+dateStr) == "on"
 		note := formValues.Get("note-" + dateStr)
 
-		// データベースにデータを挿入または更新
 		query := `INSERT INTO gaihaku_kesshoku_records (student_id, record_date, breakfast, lunch, dinner, overnight, note) VALUES ($1, $2, $3, $4, $5, $6, $7)
-		ON CONFLICT (student_id, record_date) DO UPDATE SET breakfast = EXCLUDED.breakfast, lunch = EXCLUDED.lunch, dinner = EXCLUDED.dinner, overnight = EXCLUDED.overnight, note = EXCLUDED.note;`
+        ON CONFLICT (student_id, record_date) DO UPDATE SET breakfast = EXCLUDED.breakfast, lunch = EXCLUDED.lunch, dinner = EXCLUDED.dinner, overnight = EXCLUDED.overnight, note = EXCLUDED.note;`
 
-		_, err = db.Exec(query, studentID, recordDate, !breakfast, !lunch, !dinner, overnight, note)
+		_, err = db.Exec(query, studentID, recordDate, breakfast, lunch, dinner, overnight, note)
 		if err != nil {
 			log.Printf("Failed to insert or update record for %s: %v", dateStr, err)
 			return c.String(http.StatusInternalServerError, "Failed to submit record.")
 		}
 	}
-
-	sess.AddFlash("登録を受け付けました。", "success_message")
-	sess.Save(c.Request(), c.Response())
-
-	log.Printf("Successfully submitted records for student %s", studentID)
 
 	// 成功したらメインページにリダイレクト
 	return c.Redirect(http.StatusSeeOther, "/main")
