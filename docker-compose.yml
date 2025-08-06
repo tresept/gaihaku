@@ -21,6 +21,14 @@ services:
     volumes:
       - .:/go/src
     working_dir: /go/src
+    init: true  # initプロセスを追加
+    depends_on:
+      - db
+    # コンテナ起動時に go mod tidy を実行
+    # この設定は .devcontainer/devcontainer.json の onCreateCommand に相当
+    # 実際には VS Code が自動で実行してくれるため、不要な場合が多い
+    # もし必要であればここにコマンドを追加します
+    # entrypoint: ["/bin/sh", "-c", "go mod tidy && tail -f /dev/null"]
 
 volumes:
   db_data:

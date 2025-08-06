@@ -11,16 +11,12 @@
       ]
     }
   },
-  "features": {
-    "ghcr.io/devcontainers/features/git-auth:1": {
-      "gitCredentialManager": "true"
-    }
-  },
-  "remoteUser": "vscode",
-  "mounts": [
-    "source=${localEnv:HOME}/.ssh,target=/home/vscode/.ssh,type=bind,consistency=cached"
-  ],
   "containerEnv": {
     "SESSION_SECRET_KEY": "your-secret-key-here"
-  }
+  },
+  "remoteUser": "root",
+  "mounts": [
+    "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind,consistency=cached",
+    "source=${localEnv:HOME}/.ssh,target=/root/.ssh,type=bind,consistency=cached"
+  ]
 }
