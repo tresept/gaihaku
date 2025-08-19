@@ -44,13 +44,35 @@ func initDBSchema(db *sql.DB) error {
 	return nil
 }
 
+// getAllUsers は全てのユーザー情報を取得します（パスワードを除く）
+func getAllUsers(db *sql.DB) ([]User, error) {
+	rows, err := db.Query("SELECT id, username, role FROM users ORDER BY id ASC")
+	if err != nil {
+		return nil, fmt.Errorf("failed to query users: %w", err)
+	}
+	defer rows.Close()
+
+	var users []User
+	for rows.Next() {
+		var u User
+		if err := rows.Scan(&u.ID, &u.Username, &u.Role); err != nil {
+			log.Printf("Failed to scan user: %v", err)
+			continue
+		}
+		users = append(users, u)
+	}
+
+	return users, nil
+}
+
 // createUsersTable はユーザーテーブルを作成します
 func createUsersTable(db *sql.DB) error {
 	const createTableSQL = `
 	CREATE TABLE IF NOT EXISTS users (
 		id SERIAL PRIMARY KEY,
 		username VARCHAR(50) UNIQUE NOT NULL,
-		password VARCHAR(255) NOT NULL
+		password VARCHAR(255) NOT NULL,
+		role VARCHAR(10) NOT NULL DEFAULT 'user'
 	);`
 	_, err := db.Exec(createTableSQL)
 	return err
@@ -97,15 +119,24 @@ func RegisterUser(db *sql.DB, studentID, password string) error {
 }
 
 // AuthenticateUser はユーザーのログイン認証を行います
-func AuthenticateUser(db *sql.DB, studentID, password string) bool {
-	var hashedPassword string
-	query := "SELECT password FROM users WHERE username = $1"
-	err := db.QueryRow(query, studentID).Scan(&hashedPassword)
+func AuthenticateUser(db *sql.DB, studentID, password string) (bool, string) {
+	var hashedPassword, role string
+	query := "SELECT password, role FROM users WHERE username = $1"
+	err := db.QueryRow(query, studentID).Scan(&hashedPassword, &role)
 
 	if err != nil {
-		return false
+		if err == sql.ErrNoRows {
+			return false, "" // ユーザーが存在しない
+		}
+		log.Printf("Error during authentication query: %v", err)
+		return false, ""
 	}
-	return bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password)) == nil
+
+	if bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password)) == nil {
+		return true, role // 認証成功
+	}
+
+	return false, "" // パスワードが一致しない
 }
 
 // getGaihakuRecords は学生の欠食・外泊記録を取得します
@@ -157,4 +188,32 @@ func getGaihakuKesshokuRecords(db *sql.DB, studentID string) ([]GaihakuKesshokuR
 	}
 
 	return records, nil
+}
+
+// createAdminUserIfNotExists は、管理者ユーザーが存在しない場合に作成します
+func createAdminUserIfNotExists(db *sql.DB) error {
+	var exists bool
+	err := db.QueryRow("SELECT EXISTS(SELECT 1 FROM users WHERE username = 'admin')").Scan(&exists)
+	if err != nil {
+		return fmt.Errorf("failed to check if admin user exists: %w", err)
+	}
+
+	if !exists {
+		// パスワードをハッシュ化
+		password := "admin" // デフォルトのパスワード
+		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+		if err != nil {
+			return fmt.Errorf("failed to hash admin password: %w", err)
+		}
+
+		// 管理者ユーザーを挿入
+		query := "INSERT INTO users (username, password, role) VALUES ($1, $2, $3)"
+		_, err = db.Exec(query, "admin", string(hashedPassword), "admin")
+		if err != nil {
+			return fmt.Errorf("failed to insert admin user: %w", err)
+		}
+		log.Println("Default admin user created with username 'admin' and password 'admin'")
+	}
+
+	return nil
 }
