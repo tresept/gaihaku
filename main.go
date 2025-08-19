@@ -35,6 +35,11 @@ func main() {
 		log.Fatal("Failed to initialize database schema:", err)
 	}
 
+	// 管理者ユーザーが存在しない場合は作成
+	if err = createAdminUserIfNotExists(db); err != nil {
+		log.Fatal("Failed to create admin user:", err)
+	}
+
 	// Echoインスタンスの作成
 	e := echo.New()
 
@@ -58,6 +63,15 @@ func main() {
 	e.GET("/main", mainPageHandler)
 	e.POST("/gaihaku", gaihakuHandler)
 	e.GET("/logout", logoutHandler)
+
+	// 管理者用ルート
+	adminGroup := e.Group("/admin")
+	adminGroup.Use(AdminMiddleware)
+	adminGroup.GET("", adminDashboardHandler)
+	adminGroup.GET("/user/:student_id", adminViewUserRecordsHandler)
+	adminGroup.POST("/user/:student_id", adminUpdateUserRecordsHandler)
+	adminGroup.GET("/add_user", adminAddUserFormHandler)
+	adminGroup.POST("/add_user", adminAddUserHandler)
 
 	// サーバーをポート8080で起動
 	e.Logger.Fatal(e.Start(":8080"))
